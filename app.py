@@ -5,7 +5,7 @@ from datetime import datetime
 
 import requests
 from flask import Flask, request
-import api
+
 import template
 app = Flask(__name__)
 
@@ -64,14 +64,14 @@ def webhook():
                                 template.send_message(sender_id,"somthing went wrong")
                                 template.send_quick_reply(sender_id)
                     except:
-                        # try:
-                        c_lat = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['lat']
-                        c_lon = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['long']
-                        template.send_button_add_location(sender_id,c_lat,c_lon)
-                        template.send_message(sender_id, "Thank you!" + " " + str(c_lat) + "," + str(c_lon))
+                        try:
+                            c_lat = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['lat']
+                            c_lon = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['long']
+                            template.send_button_add_location(sender_id,c_lat,c_lon)
+                            template.send_message(sender_id, "Thank you!" + " " + str(c_lat) + "," + str(c_lon))
 
-                        # except:
-                        #     template.send_message(sender_id, "not found")
+                        except:
+                            template.send_message(sender_id, "not found")
 
 
 
