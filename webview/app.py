@@ -103,7 +103,5 @@ def getpinnedlocations():
         else:
             return "N/A"
 
-
-
 if __name__ == '__main__':
-    app.run(threaded=True)
+    app.run(host='192.168.43.126',threaded=True)

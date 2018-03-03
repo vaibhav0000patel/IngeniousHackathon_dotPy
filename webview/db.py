@@ -61,7 +61,7 @@ def get_user_interests(sender_id):
     return data
 
 def get_user_interest_data(interest):
-    scur = conn.cursor()
+    cur = conn.cursor()
     cur.execute("Select DISTINCT ud.* from user_data ud,user_interests ui where ud.sender_id=ui.sender_id and (ui.interest='"+interest+"' or ud.status like '%"+interest+"%') and ud.lon!='' and ud.lat!='' and ud.visibility != 'off' ;")
     data = cur.fetchall()
     cur.close()
