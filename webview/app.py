@@ -22,7 +22,7 @@ def addUserInfo(sender_id):
         if user_data:
             kwargs = {
                     'sender_id' : sender_id,
-                    'name' : name,
+                    'name' : request.args.get('name'),
                     'phone' : user_data[0][8],
                     'email' : user_data[0][3],
                     'status' : user_data[0][4],
@@ -32,7 +32,7 @@ def addUserInfo(sender_id):
         else:
             kwargs = {
                     'sender_id' : sender_id,
-                    'name' : '',
+                    'name' : request.args.get('name'),
                     'phone' : '',
                     'email' : '',
                     'staus' : '',
@@ -102,11 +102,6 @@ def getpinnedlocations():
             return render_template('google_maps.html',data=data)
         else:
             return "N/A"
-
-
-
-
-
 
 
 
