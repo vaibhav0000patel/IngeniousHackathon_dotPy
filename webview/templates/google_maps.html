@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #map {
+        height: 100%;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 2,
+          center: new google.maps.LatLng(2.8,-187.3),
+          mapTypeId: 'terrain'
+        });
+
+        // Create a <script> tag and set the USGS URL as the source.
+        var script = document.createElement('script');
+        // This example uses a local copy of the GeoJSON stored at
+        // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
+        script.src = eqfeed_callback({
+            "features":[
+
+              {
+                "geometry":{
+                  "type":"Point",
+                  "coordinates":[72.559378, 23.092004 ]
+                },
+                "id":"123"
+              },
+
+            ]
+          });
+        document.getElementsByTagName('head')[0].appendChild(script);
+      }
+
+      // Loop through the results array and place a marker for each
+      // set of coordinates.
+      window.eqfeed_callback = function(results) {
+        var vars = {};
+        for (var i = 0; i < results.features.length; i++) {
+          var coords = results.features[i].geometry.coordinates;
+          var id = results.features[i].id;
+          var latLng = new google.maps.LatLng(coords[1],coords[0]);
+          marker = new google.maps.Marker({
+            position: latLng,
+            map: map
+          });
+          attachSecretMessage(marker, id);
+
+          function attachSecretMessage(marker, id) {
+              marker.addListener('click', function() {
+              var win = window.open('http://messenger.com/'+id, '_blank');
+                if (win) {
+                   win.focus();
+                } else {
+                   alert('Please allow popups for this website');
+                }
+            });
+          }
+        }
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC2uedkiOlLbkHmRCZ5G4mzUpbayOJUUs0&callback=initMap">
+    </script>
+  </body>
+</html>
