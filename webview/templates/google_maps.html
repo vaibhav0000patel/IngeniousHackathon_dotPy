@@ -24,6 +24,8 @@
         });
 
         // Create a <script> tag and set the USGS URL as the source.
+
+
         var script = document.createElement('script');
         // This example uses a local copy of the GeoJSON stored at
         // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
@@ -56,15 +58,20 @@
             map: map
           });
           attachSecretMessage(marker, id);
+          var infowindow = new google.maps.InfoWindow();
 
           function attachSecretMessage(marker, id) {
               marker.addListener('click', function() {
+
+                infowindow.setContent('<div><strong>Hello</strong></div>');
+              infowindow.open(map, this);
+              /*
               var win = window.open('http://messenger.com/'+id, '_blank');
                 if (win) {
                    win.focus();
                 } else {
                    alert('Please allow popups for this website');
-                }
+                }*/
             });
           }
         }
