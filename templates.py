@@ -10,7 +10,7 @@ import template
 app = Flask(__name__)
 
 
-ACCESS_TOKEN = "EAAEY7WK7nP0BAFZCQJIPONeZBPW1gQ3UtvGZCHGZBmzNNSWVXdziiAXb88mjsuFmCWAWwnpeVK4tt1AJ85I4uPWQyveagycqF9CbgBYZBqM7rsqniPaGyjz49mtswzBHF5Hlse4j1ZBdlu8xv0Be8RkAZBmqW6dPd6C96NX2MEoLl5vxZAChO8Xb"
+ACCESS_TOKEN = "EAAEY7WK7nP0BALIehE3237D8vZCpIew9htHlodRxco1WUAMaCWxnsJbZC6uUDKu594k3HvxAR7BpON7m20OYtllH0e5Jbgn38TTyy8VRrrhDUvMgTwzuW4caSpfdPRx0pc9xVylHjiTDxqp6AVvZBjZAocZBZBj0OhZBbaVWo16Sk9KzckOwzjX"
 VERIFY_TOKEN = "test_token"
 root_url = "https://www.example.com"
 
@@ -81,7 +81,7 @@ def send_button_fetch(recipient_id,message_text):
         log("send_button_fetch errors---------------------------------------")
 
 # get req to webform with location 
-def send_button_add_lcoation(recipient_id,c_lat,c_lon):
+def send_button_add_location(recipient_id,c_lat,c_lon):
     log("sending user to {recipient} to webform with data : {lat} and {lon}".format(recipient=recipient_id, lat=c_lat,lon=c_lon))
     #/submitlocation/<sender_id>?lon=<lon>&lat=<lat>
     url = root_url + "/submitlocation" + str(recipient_id) + "log=" + str(c_lon) + "&lat=" + str(c_lat)

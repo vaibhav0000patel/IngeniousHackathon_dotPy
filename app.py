@@ -9,7 +9,7 @@ import api
 import template
 app = Flask(__name__)
 
-ACCESS_TOKEN = "EAAEY7WK7nP0BAFZCQJIPONeZBPW1gQ3UtvGZCHGZBmzNNSWVXdziiAXb88mjsuFmCWAWwnpeVK4tt1AJ85I4uPWQyveagycqF9CbgBYZBqM7rsqniPaGyjz49mtswzBHF5Hlse4j1ZBdlu8xv0Be8RkAZBmqW6dPd6C96NX2MEoLl5vxZAChO8Xb"
+ACCESS_TOKEN = "EAAEY7WK7nP0BALIehE3237D8vZCpIew9htHlodRxco1WUAMaCWxnsJbZC6uUDKu594k3HvxAR7BpON7m20OYtllH0e5Jbgn38TTyy8VRrrhDUvMgTwzuW4caSpfdPRx0pc9xVylHjiTDxqp6AVvZBjZAocZBZBj0OhZBbaVWo16Sk9KzckOwzjX"
 VERIFY_TOKEN = "test_token"
 
 
@@ -50,27 +50,28 @@ def webhook():
                         elif message_text == "No":
                             name = template.get_name(sender_id)
                             template.send_button_add_interest(sender_id,name)
-                    # elif message_text == "location":
-                    #     template.send_button_fetch(sender_id,message_text)
-                    else:
-                        interest_db = template.check_interest(sender_id)
-                        if interest_db == 'N/A':
-                            template.send_message(sender_id,"Opps we dont have anyone around you with this interest right now.\n Can I help to find any other interests?")
-                            template.send_quick_reply(sender_id)
-                        elif interest_db == 'ok':
-                            template.send_button_fetch(sender_id,message_text)
-                        else: 
-                            template.send_message(sender_id,"somthing went wrong")
-                            template.send_quick_reply(sender_id)
+                        # elif message_text == "location":
+                        #     template.send_button_fetch(sender_id,message_text)
+                        else:
+                            interest_db = ''
+                            # interest_db = template.check_interest(sender_id)
+                            if interest_db == 'N/A':
+                                template.send_message(sender_id,"Opps we dont have anyone around you with this interest right now.\n Can I help to find any other interests?")
+                                template.send_quick_reply(sender_id)
+                            elif interest_db == 'ok':
+                                template.send_button_fetch(sender_id,message_text)
+                            else: 
+                                template.send_message(sender_id,"somthing went wrong")
+                                template.send_quick_reply(sender_id)
                     except:
-                        try:
-                            c_lat = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['lat']
-                            c_lon = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['long']
-                            template.send_button_add_location(sender_id,c_lat,c_lon)
-                            template.send_message(sender_id, "Thank you!" + " " + str(c_lat) + "," + str(c_lon))
+                        # try:
+                        c_lat = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['lat']
+                        c_lon = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['long']
+                        template.send_button_add_location(sender_id,c_lat,c_lon)
+                        template.send_message(sender_id, "Thank you!" + " " + str(c_lat) + "," + str(c_lon))
 
-                        except:
-                            template.send_message(sender_id, "not found")
+                        # except:
+                        #     template.send_message(sender_id, "not found")
 
 
 
@@ -87,12 +88,12 @@ def webhook():
                         template.send_typing(send_id)
                         template.send_message(send_id,"Hello " + uname + " WELCOME MSG")
                     elif msg == 'profile':
-                        location_flag = "available"
+                        location_flag = "n"
                         if location_flag == "available":
                             template.send_typing(send_id)
                             template.add_data_quick_reply(send_id)
                         else:
-                            template.location_qruick_reply(sender_id)
+                            template.location_qruick_reply(send_id)
 
                     
     return "ok", 200
