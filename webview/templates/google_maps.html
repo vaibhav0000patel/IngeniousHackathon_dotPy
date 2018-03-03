@@ -44,15 +44,20 @@
         // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
         script.src = eqfeed_callback({
             "features":[
-
+              {% for item in data %}
               {
                 "geometry":{
                   "type":"Point",
-                  "coordinates":[72.559378, 23.092004 ]
+                  "coordinates":[{{ item.5 }},{{ item.6 }}],
                 },
-                "id":"123"
+                "id":"{{ item.1 }}",
+                "name":"{{ item.2 }}",
+                "status":"{{ item.4 }}",
+                "email":"{{ item.3 }}",
+                "phone":"{{ item.8 }}",
+                "visibility":"{{ item.7 }}",
               },
-
+              {% endfor %}
             ]
           });
         document.getElementsByTagName('head')[0].appendChild(script);
@@ -65,22 +70,26 @@
         for (var i = 0; i < results.features.length; i++) {
           var coords = results.features[i].geometry.coordinates;
           var id = results.features[i].id;
-          var latLng = new google.maps.LatLng(coords[1],coords[0]);
+          var name = results.features[i].name;
+          var status = results.features[i].status;
+          var latLng = new google.maps.LatLng(coords[0],coords[1]);
           marker = new google.maps.Marker({
             position: latLng,
             map: map
           });
-          attachSecretMessage(marker, id);
+          attachSecretMessage(marker,id,name,status);
           var infowindow = new google.maps.InfoWindow();
 
-          function attachSecretMessage(marker, id) {
+          function attachSecretMessage(marker,id,name,status) {
               marker.addListener('click', function() {
 
-                msg = '<div><strong>Hello</strong></div><br/>';
+                var infowindow = new google.maps.InfoWindow();
+                msg = '<div><strong>'+name+'</strong></div><br/>';
+                msg += '<div><p>'+status+'</p></div>'
                 msg += '<div><a href="/test/" class="btn waves-effect waves-light blue lighten-1">Send</a></div>';
 
                 infowindow.setContent(msg);
-              infowindow.open(map, this);
+                  infowindow.open(map, this);
               /*
               var win = window.open('http://messenger.com/'+id, '_blank');
                 if (win) {

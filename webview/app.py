@@ -1,5 +1,7 @@
 from flask import Flask,render_template,redirect,url_for,request
 
+import db
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -12,8 +14,8 @@ def addUserInfo(sender_id):
     name = request.args.get('name') if 'name' in request.args else False
 
     if name:
-        user_data = get_userdata(sender_id)
-        interest_data = get_user_interests(sender_id)
+        user_data = db.get_userdata(sender_id)
+        interest_data = db.get_user_interests(sender_id)
         interests=""
         for intdata in interest_data:
             interests += "!#!"+intdata[1]
@@ -23,9 +25,7 @@ def addUserInfo(sender_id):
                     'name' : name,
                     'phone' : user_data[0][8],
                     'email' : user_data[0][3],
-                    'staus' : user_data[0][4],
-                    'lon' : user_data[0][5],
-                    'lat' : user_data[0][6],
+                    'status' : user_data[0][4],
                     'visibility' : user_data[0][7],
                     'interests' : interests
             }
@@ -36,15 +36,12 @@ def addUserInfo(sender_id):
                     'phone' : '',
                     'email' : '',
                     'staus' : '',
-                    'lon' : '',
-                    'lat' : '',
                     'visibility' : '',
                     'interests' : ''
             }
-        return render_template('add_user_data.html',**kwargs)
+        return render_template('adduserinfo.html',**kwargs)
     else:
         return "Invalid URL"
-
 
 
 @app.route('/submituserinfo/',methods = ['POST'])
@@ -56,74 +53,62 @@ def submitUserInfo():
             'phone' : request.form['phone'] if 'phone' in request.form else '',
             'email' : request.form['email'] if 'email' in request.form else '',
             'status' : request.form['status'] if 'status' in request.form else '',
-            'lon' : request.form['lon'] if 'lon' in request.form else '',
-            'lat' : request.form['lat'] if 'lat' in request.form else '',
+            'visibility' : request.form['visibility'] if 'visibility' in request.form else '',
         }
-        interest_data = request.form['interests'].split("!#!") if 'interests' in request.form else ''
+        int_data = request.form['interests'] if 'interests' in request.form else ''
+        interest_data = [i for i in int_data.split("!#!") if len(i)>2]
         if 'sender_id' in request.form:
-            set_userdata(user_data,request.form['sender_id'])
-            set_user_interests(interest_data,request.form['sender_id'])
-        return redirect(url_for('index'))
+            db.set_userdata(user_data,request.form['sender_id'])
+            db.set_user_interests(interest_data,request.form['sender_id'])
+        return redirect('/adduserinfo/'+str(request.form['sender_id'])+'?name='+str(request.form['name']))
 
-def set_userdata(data,sender_id):
-    conn = psycopg2.connect(host="localhost",database="fbsa", user="root", password="123")
-    cur = conn.cursor()
-    cur.execute("Select * from user_data where sender_id='"+str(sender_id)+"'")
-    userdata = cur.fetchall()
-    if userdata:
-        query_data = ""
-        for key in data:
-            query_data += key+"='"+str(data[key])+"',"
-        cur.execute("UPDATE user_data SET "+query_data[:-1]+" WHERE sender_id='"+str(sender_id)+"';")
+
+
+@app.route('/submitlocation/<sender_id>',methods = ['GET'])
+def submitLocation(sender_id):
+    if request.method == 'GET':
+        lon = request.args.get('lon') if 'lon' in request.args else False
+        lat = request.args.get('lat') if 'lat' in request.args else False
+        if lon and lat:
+            user_data = {
+                'sender_id' : sender_id,
+                'lon' : lon,
+                'lat' : lat,
+            }
+            db.set_userdata(user_data,sender_id)
+            return "Data updated successfully!"
+        else:
+            return "Invalid URL"
     else:
-        query_data = "("
-        for key in cols:
-            query_data += "'"+(str(data[key]) if key in data else None)+"',"
-        query_data = query_data[:-1]+")"
-        cur.execute("INSERT into user_data (sender_id,name,phone,email,status,lon,lat) VALUES "+query_data+";")
-    conn.commit()
-    cur.close()
-    return data
+        return "Invalid URL"
 
-def set_user_interests(data,sender_id):
-    conn = psycopg2.connect(host="localhost",database="fbsa", user="root", password="123")
-    cur = conn.cursor()
-    cur.execute("delete from user_interests where sender_id='"+str(sender_id)+"'")
-    for interest in data:
-        if interest!="" or interest!=None:
-            cur.execute("INSERT into user_interests (sender_id,interest) VALUES ('"+str(sender_id)+"','"+str(interest)+"');")
-    conn.commit()
-    cur.close()
-    return data
+@app.route('/checkuserlocation/<sender_id>')
+def checkuserlocation(sender_id):
+    data = db.get_userdata(sender_id)
+    if data:
+        if data[0][5] and data[0][6]:
+            return '1'
+        else:
+            return '0'
+    else:
+        return '0'
 
-def get_userdata(sender_id):
-    conn = psycopg2.connect(host="localhost",database="fbsa", user="root", password="123")
-    cur = conn.cursor()
-    cur.execute("Select * from user_data where sender_id='"+str(sender_id)+"'")
-    data = cur.fetchall()
-    cur.close()
-    conn.close()
-    return data
+@app.route('/getpinnedlocations/',methods = ['GET'])
+def getpinnedlocations():
+    if request.method == 'GET':
+        data = db.get_user_interest_data(request.args.get('interest'))
+        print "###########",data
+        if data:
+            return render_template('google_maps.html',data=data)
+        else:
+            return "N/A"
 
-def get_user_interests(sender_id):
-    conn = psycopg2.connect(host="localhost",database="fbsa", user="root", password="123")
-    cur = conn.cursor()
-    cur.execute("Select * from user_interests where sender_id='"+str(sender_id)+"'")
-    data = cur.fetchall()
-    cur.close()
-    conn.close()
-    return data
 
-def get_user_interest_data(interest):
-    conn = psycopg2.connect(host="localhost",database="fbsa", user="root", password="123")
-    cur = conn.cursor()
-    cur.execute("Select * from user_data ud,user_interests ui where ud.sender_id=ui.sender_id and ui.interest='"+interest+"';")
-    data = cur.fetchall()
-    cur.close()
-    conn.close()
-    return data
+
+
+
 
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(threaded=True)

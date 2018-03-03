@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>User Info</title>
+
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="{{ url_for('static',filename='css/materialize.css') }}" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="{{ url_for('static',filename='css/style.css') }}" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script src="{{ url_for('static',filename='js/Chart.min.js') }}"></script>
+    <style>
+      th,td{
+        text-align: center;
+      }
+
+      .row{
+        margin-bottom: 5px;
+      }
+      .input-field{
+        margin: 0!important;
+      }
+    </style>
+</head>
+<body>
+  <nav class="blue " role="navigation">
+    <div class="nav-wrapper container">
+		<a id="logo-container" href="" class="brand-logo">
+			<i class=" material-icons" style="font-size:50px">insert_chart</i>FB
+		</a>
+    <!--<ul class="right hide-on-med-and-down">
+      <li><a href="/twitter">Home</a></li>
+
+    </ul>
+
+      <ul id="nav-mobile" class="side-nav">
+        <li><a href="#">Home</a></li>
+      </ul>
+      <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+    -->
+    </div>
+  </nav>
+  <div class="section no-pad-bot" id="index-banner">
+      <div class="container">
+          <br>
+
+          <h6 class="header center red-text lighten-1" style="font-size:20px;">Add Interests</h6>
+
+          <form action = "/submituserinfo/" method="post">
+
+      			<div class="row" align="center">
+              <div class="input-field row center" align="center">
+                <div class="input-field col s8 center" align="center">
+        					<i class="material-icons prefix" style="color:#2196f3">search</i>
+        					<input id="user_interest" type="text" class="validate" />
+        					<label for="user_interest">Interests</label>
+                </div>
+                <div class="input-field col s4 center" align="center">
+                  <a href="javascript:void(0)" onclick="add_interest()" class="btn-floating btn-small waves-effect waves-light red" style="font-size:10px;"><i class="material-icons">add</i></a>
+                </div>
+              </div>
+      			</div>
+      		  <div class="row center" id="interests_tbody">
+
+            </div>
+
+            <div class="row">
+              <div class="col s1"></div>
+              <div class="input-field col s10">
+                <textarea id="status" name="status" class="materialize-textarea">{{ status }}</textarea>
+                <label for="status">Status</label>
+              </div>
+              <div class="col s1"></div>
+            </div>
+
+            <div class="input-field row center" align="center">
+              <div class="col s2"></div>
+              <div class="input-field col s8 center" align="center">
+                <input type="text" name="email" id="email" value="{{ email }}"/>
+                <label for="email">Email</label>
+              </div>
+              <div class="col s2"></div>
+            </div>
+
+            <div class="input-field row center" align="center">
+              <div class="col s2"></div>
+                <div class="input-field col s8 center" align="center">
+                  <input type="text" name="phone" id="phone" value="{{ phone }}"/>
+                  <label for="phone">Phone</label>
+                </div>
+              <div class="col s2"></div>
+            </div>
+            <div class="row" align="center">
+              <h6 style="text-align:center;">Visibility</h6>
+            </div>
+            <div class="row" align="center">
+              <div class="col s2"></div>
+                <div class="col s8 center" align="center">
+                  <div class="switch">
+                    <label>
+                      Off
+                      <input type="checkbox" onchange="change_visibility()" id="visibility" {{ '' if(visibility=="off") else 'checked' }}>
+                      <span class="lever"></span>
+                      On
+                    </label>
+                  </div>
+                </div>
+              <div class="col s2"></div>
+            </div>
+            <input type="text" name="name" id="name" hidden="true" value="{{ name }}"/>
+            <input type="text" name="interests" id="interests" hidden="true" value="{{ interests }}"/>
+            <input type="text" name="sender_id" id="sender_id" value="{{ sender_id }}"  hidden="true"/>
+            <input type="text" name="visibility" id="user_visibility" hidden="true" value="{{ 'off' if(visibility=='off') else 'on' }}" default="on"/>
+
+            <br/>
+
+            <div class="input-field row center" align="center">
+              <input type="submit" value="Save" name="submit" class="btn waves-effect waves-light red lighten-1">
+            </div>
+
+
+          </form>
+
+      <br>
+    </div>
+  </div>
+
+  <!--  Scripts-->
+    <script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/materialize.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/init.js') }}"></script>
+
+  <script>
+    function change_visibility(){
+      data = $('#visibility').val();
+      if ($('#visibility').is(":checked")){
+        $('#user_visibility').val('on');
+      }else{
+        $('#user_visibility').val('off');
+      }
+    }
+    function assign_data(){
+      var data = "";
+      $("#interests_tbody div").each(function() {
+         data = data+"!#!"+$(this).find(".item").html();
+      });
+      console.log(data);
+      $('#interests').val(data);
+    }
+    function add_interest(){
+      if($("#user_interest").val().trim()!=null && $("#user_interest").val().trim()!=""){
+        $('#interests_tbody').append('<div class="chip"><span class="item">'+$("#user_interest").val().trim()+'</span><i class="close material-icons" onClick="$(this).closest(\'div\').remove();assign_data();">close</div>');
+        assign_data();
+        $('#user_interest').val('');
+      }
+    }
+    $(document).ready(function(){
+      var str = "{{ interests }}";
+      var res = str.split("!#!")
+      $( res ).each(function( index ) {
+        if (res[index].length>1){
+          $('#interests_tbody').append('<div class="chip"><span class="item">'+res[index]+'</span><i class="close material-icons" onClick="$(this).closest(\'div\').remove();assign_data();">close</div>');
+        }
+      });
+
+    });
+  </script>
+
+  </body>
+</html>
