@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css/materialize.css') }}" type="text/css" rel="stylesheet" media="screen,projection"/>
+    <link href="{{ url_for('static',filename='css/style.css') }}" type="text/css" rel="stylesheet" media="screen,projection"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script src="{{ url_for('static',filename='js/Chart.min.js') }}"></script>
     <style>
       #map {
         height: 100%;
@@ -10,7 +16,14 @@
         margin: 0;
         padding: 0;
       }
+      .btn{
+        height: 25px;
+        line-height: 25px;
+        padding: 0 1rem;
+      }
     </style>
+
+
   </head>
   <body>
     <div id="map"></div>
@@ -63,7 +76,10 @@
           function attachSecretMessage(marker, id) {
               marker.addListener('click', function() {
 
-                infowindow.setContent('<div><strong>Hello</strong></div>');
+                msg = '<div><strong>Hello</strong></div><br/>';
+                msg += '<div><a href="/test/" class="btn waves-effect waves-light blue lighten-1">Send</a></div>';
+
+                infowindow.setContent(msg);
               infowindow.open(map, this);
               /*
               var win = window.open('http://messenger.com/'+id, '_blank');
@@ -80,5 +96,9 @@
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC2uedkiOlLbkHmRCZ5G4mzUpbayOJUUs0&callback=initMap">
     </script>
+    <script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/materialize.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/init.js') }}"></script>
+
   </body>
 </html>
