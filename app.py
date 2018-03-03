@@ -7,8 +7,8 @@ from flask import Flask, request
 import template
 app = Flask(__name__)
 
-ACCESS_TOKEN = ""
-VERIFY_TOKEN = ""
+ACCESS_TOKEN = "EAAEY7WK7nP0BAFZCQJIPONeZBPW1gQ3UtvGZCHGZBmzNNSWVXdziiAXb88mjsuFmCWAWwnpeVK4tt1AJ85I4uPWQyveagycqF9CbgBYZBqM7rsqniPaGyjz49mtswzBHF5Hlse4j1ZBdlu8xv0Be8RkAZBmqW6dPd6C96NX2MEoLl5vxZAChO8Xb"
+VERIFY_TOKEN = "test_token"
 
 
 @app.route('/', methods=['GET'])
@@ -40,12 +40,20 @@ def webhook():
 
                     sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
-                      # the message's text
+                    try:
+                        message_text = messaging_event["message"]["text"]
+                        template.send_message(sender_id,"roger that!")
+                    except:
+                        template.send_message(sender_id,"Not Found")
+                        
 
                 elif messaging_event.get("postback"):  # user clicked/tapped "postback" button in earlier message
                     pass
                     
     return "ok", 200
+
+template.per_menu()
+template.start_button()
 
 if __name__ == '__main__':
     app.run(debug=True,port=4040)
