@@ -5,11 +5,10 @@ from datetime import datetime
 
 import requests
 from flask import Flask, request
-
 import template
 app = Flask(__name__)
 
-ACCESS_TOKEN = "EAAEY7WK7nP0BALIehE3237D8vZCpIew9htHlodRxco1WUAMaCWxnsJbZC6uUDKu594k3HvxAR7BpON7m20OYtllH0e5Jbgn38TTyy8VRrrhDUvMgTwzuW4caSpfdPRx0pc9xVylHjiTDxqp6AVvZBjZAocZBZBj0OhZBbaVWo16Sk9KzckOwzjX"
+ACCESS_TOKEN = "EAAEY7WK7nP0BAKNOO0Rtmlvz1HEqdyL4Jn6pW9fNy0DZCPkCGqhFZCstcZChX3mZBtOpBzPwYQBaaMdXzZBRNE1oH7sk3PZBYDDduvSGq6QvW4He2zATYvWLHuYJ6OQY7MQrr8WWz4SgbZBpAZAusZBpJKaI0iVOGpGjfx2jQp8RZBqYGWO9ouJkkE"
 VERIFY_TOKEN = "test_token"
 
 
@@ -44,34 +43,39 @@ def webhook():
                       # the message's text
                     try:
                         message_text = messaging_event["message"]["text"]
-                        if message_text == "Football":
+                        message_text = message_text.lower()
+                        if message_text == "football":
                             template.send_typing(sender_id)
                             template.send_button_fetch(sender_id,message_text)
-                        elif message_text == "No":
+                        elif message_text == "no":
                             name = template.get_name(sender_id)
                             template.send_button_add_interest(sender_id,name)
+                        elif message_text == "skip" or message_text == "Skip":
+                            template.send_message(sender_id,"Tell me the interests you are looking for!")
+                            template.send_quick_reply(sender_id)
+
+
                         # elif message_text == "location":
                         #     template.send_button_fetch(sender_id,message_text)
                         else:
-                            interest_db = ''
-                            # interest_db = template.check_interest(sender_id)
+                            interest_db = template.check_interest(sender_id,message_text)
                             if interest_db == 'N/A':
                                 template.send_message(sender_id,"Opps we dont have anyone around you with this interest right now.\n Can I help to find any other interests?")
                                 template.send_quick_reply(sender_id)
                             elif interest_db == 'ok':
                                 template.send_button_fetch(sender_id,message_text)
                             else: 
-                                template.send_message(sender_id,"somthing went wrong")
+                                template.send_message(sender_id,"Which kind of interests you are looking for?")
                                 template.send_quick_reply(sender_id)
                     except:
                         try:
                             c_lat = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['lat']
                             c_lon = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['long']
-                            template.send_button_add_location(sender_id,c_lat,c_lon)
-                            template.send_message(sender_id, "Thank you!" + " " + str(c_lat) + "," + str(c_lon))
-
+                            name = template.get_name(sender_id)
+                            template.send_button_add_location(sender_id,c_lat,c_lon,name)
                         except:
-                            template.send_message(sender_id, "not found")
+                            template.send_message(sender_id, "Something went wrong")
+                            template.send_quick_reply(sender_id)
 
 
 
@@ -80,20 +84,26 @@ def webhook():
                     msg = messaging_event["postback"]['payload']
                     send_id = messaging_event["sender"]['id']
                     rece_id = messaging_event["recipient"]['id']
-                    profile = requests.get("https://graph.facebook.com/v2.6/"+send_id+"?fields=first_name,last_name,profile_pic&access_token="+ACCESS_TOKEN).text
-                    profile_dic = ast.literal_eval(profile)
-                    uname = profile_dic["first_name"] +" "+ profile_dic["last_name"]
-
+                    # profile = requests.get("https://graph.facebook.com/v2.6/"+send_id+"?fields=first_name,last_name,profile_pic&access_token="+ACCESS_TOKEN).text
+                    # profile_dic = ast.literal_eval(profile)
+                    # print profile_dic
+                    # uname = profile_dic["first_name"] +" "+ profile_dic["last_name"]
+                    name = template.get_name(send_id)
                     if msg == 'Get Started':
                         template.send_typing(send_id)
-                        template.send_message(send_id,"Hello " + uname + " WELCOME MSG")
+                        template.send_message(send_id,"Hello " + str(name.replace("_"," ")) + " \n" + "I am piloto, your assistant to find people with particular interest." )
+                        template.welcome_quick_reply(send_id)
                     elif msg == 'profile':
-                        location_flag = "n"
-                        if location_flag == "available":
+                        location_flag = requests.get("https://whispering-everglades-21251.herokuapp.com/checkuserlocation/"+str(send_id)).text
+                        print '#'*10 +  location_flag
+                        print send_id
+                        if location_flag == "0":
                             template.send_typing(send_id)
-                            template.add_data_quick_reply(send_id)
-                        else:
                             template.location_qruick_reply(send_id)
+                        elif location_flag == "1":
+                            template.add_data_quick_reply(send_id)
+                        # else:
+                        #     template.location_qruick_reply(send_id)
 
                     
     return "ok", 200
@@ -102,4 +112,4 @@ template.start_button()
 template.per_menu()
 
 if __name__ == '__main__':
-    app.run(debug=True,port=4040)
+    app.run(debug=True,port=8080)
