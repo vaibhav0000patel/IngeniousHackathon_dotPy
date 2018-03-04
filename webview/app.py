@@ -6,7 +6,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('google_maps.html')
+    return "working"
+    # return render_template('google_maps.html')
 
 @app.route('/adduserinfo/<sender_id>',methods = ['GET'])
 def addUserInfo(sender_id):
@@ -69,14 +70,15 @@ def submitLocation(sender_id):
     if request.method == 'GET':
         lon = request.args.get('lon') if 'lon' in request.args else False
         lat = request.args.get('lat') if 'lat' in request.args else False
-        if lon and lat:
+        name = request.args.get('name') if 'name' in request.args else False
+        if lon and lat and name:
             user_data = {
                 'sender_id' : sender_id,
                 'lon' : lon,
                 'lat' : lat,
             }
             db.set_userdata(user_data,sender_id)
-            return "Data updated successfully!"
+            return redirect('/adduserinfo/'+str(sender_id)+'?name='+str(name))
         else:
             return "Invalid URL"
     else:
@@ -97,11 +99,11 @@ def checkuserlocation(sender_id):
 def getpinnedlocations():
     if request.method == 'GET':
         data = db.get_user_interest_data(request.args.get('interest'))
-        print "###########",data
         if data:
             return render_template('google_maps.html',data=data)
         else:
             return "N/A"
 
+
 if __name__ == '__main__':
-    app.run(host='192.168.43.126',threaded=True)
+    app.run(threaded=True)
