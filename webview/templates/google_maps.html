@@ -3,13 +3,20 @@
   <head>
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/materialize.css') }}" type="text/css" rel="stylesheet" media="screen,projection"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
     <link href="{{ url_for('static',filename='css/style.css') }}" type="text/css" rel="stylesheet" media="screen,projection"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-    <script src="{{ url_for('static',filename='js/Chart.min.js') }}"></script>
+      <script src="{{ url_for('static',filename='js/Chart.min.js') }}"></script>
     <style>
       #map {
+        width: 100%;
         height: 100%;
+      }
+      @media only screen and (max-width: 800px) {
+        #map {
+          width: 100%;
+          height: 300px;
+        }
       }
       html, body {
         height: 100%;
@@ -21,93 +28,122 @@
         line-height: 25px;
         padding: 0 1rem;
       }
+      th,td{
+        text-align: center;
+      }
+
+      .row{
+        margin-bottom: 5px;
+      }
+      .input-field{
+        margin: 5px!important;
+      }
     </style>
 
 
   </head>
   <body>
-    <div id="map"></div>
-    <script>
-      var map;
-      function initMap() {
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 2,
-          center: new google.maps.LatLng(2.8,-187.3),
-          mapTypeId: 'terrain'
-        });
 
-        // Create a <script> tag and set the USGS URL as the source.
+    <nav class="blue " style="background-color:#ECECEC !important;" role="navigation">
+      <div class="nav-wrapper container">
+  		<a id="logo-container" href="" class="brand-logo">
+  			<img src="{{ url_for('static',filename='img/logo.png') }}" width="120px" style="vertical-align: middle;"/>
+  		</a>
+      </div>
+    </nav>
+
+          <div id="map"></div>
+          <script>
+            var map;
+            function initMap() {
+              map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 6,
+                center: new google.maps.LatLng(23.0312743,72.5500481),
+                mapTypeId: 'terrain'
+              });
+
+              // Create a <script> tag and set the USGS URL as the source.
 
 
-        var script = document.createElement('script');
-        // This example uses a local copy of the GeoJSON stored at
-        // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
-        script.src = eqfeed_callback({
-            "features":[
-              {% for item in data %}
-              {
-                "geometry":{
-                  "type":"Point",
-                  "coordinates":[{{ item.5 }},{{ item.6 }}],
-                },
-                "id":"{{ item.1 }}",
-                "name":"{{ item.2 }}",
-                "status":"{{ item.4 }}",
-                "email":"{{ item.3 }}",
-                "phone":"{{ item.8 }}",
-                "visibility":"{{ item.7 }}",
-              },
-              {% endfor %}
-            ]
-          });
-        document.getElementsByTagName('head')[0].appendChild(script);
-      }
+              var script = document.createElement('script');
+              // This example uses a local copy of the GeoJSON stored at
+              // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
+              script.src = eqfeed_callback({
+                  "features":[
+                    {% for item in data %}
+                    {
+                      "geometry":{
+                        "type":"Point",
+                        "coordinates":[{{ item.5 }},{{ item.6 }}],
+                      },
+                      "id":"{{ item.1 }}",
+                      "name":"{{ item.2 }}",
+                      "status":"{{ item.4 }}",
+                      "email":"{{ item.3 }}",
+                      "phone":"{{ item.8 }}",
+                      "visibility":"{{ item.7 }}",
+                    },
+                    {% endfor %}
+                  ]
+                });
+              document.getElementsByTagName('head')[0].appendChild(script);
+            }
 
-      // Loop through the results array and place a marker for each
-      // set of coordinates.
-      window.eqfeed_callback = function(results) {
-        var vars = {};
-        for (var i = 0; i < results.features.length; i++) {
-          var coords = results.features[i].geometry.coordinates;
-          var id = results.features[i].id;
-          var name = results.features[i].name;
-          var status = results.features[i].status;
-          var latLng = new google.maps.LatLng(coords[0],coords[1]);
-          marker = new google.maps.Marker({
-            position: latLng,
-            map: map
-          });
-          attachSecretMessage(marker,id,name,status);
-          var infowindow = new google.maps.InfoWindow();
-
-          function attachSecretMessage(marker,id,name,status) {
-              marker.addListener('click', function() {
-
+            // Loop through the results array and place a marker for each
+            // set of coordinates.
+            window.eqfeed_callback = function(results) {
+              var vars = {};
+              for (var i = 0; i < results.features.length; i++) {
+                var coords = results.features[i].geometry.coordinates;
+                var id = results.features[i].id;
+                var name = results.features[i].name;
+                var status = results.features[i].status;
+                var email = results.features[i].email;
+                var phone = results.features[i].phone;
+                var latLng = new google.maps.LatLng(coords[0],coords[1]);
+                marker = new google.maps.Marker({
+                  position: latLng,
+                  map: map
+                });
+                attachSecretMessage(marker,id,name,email,phone,status);
                 var infowindow = new google.maps.InfoWindow();
-                msg = '<div><strong>'+name+'</strong></div><br/>';
-                msg += '<div><p>'+status+'</p></div>'
-                msg += '<div><a href="/test/" class="btn waves-effect waves-light blue lighten-1">Send</a></div>';
 
-                infowindow.setContent(msg);
-                  infowindow.open(map, this);
-              /*
-              var win = window.open('http://messenger.com/'+id, '_blank');
-                if (win) {
-                   win.focus();
-                } else {
-                   alert('Please allow popups for this website');
-                }*/
-            });
-          }
-        }
-      }
-    </script>
-    <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC2uedkiOlLbkHmRCZ5G4mzUpbayOJUUs0&callback=initMap">
-    </script>
-    <script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/materialize.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/init.js') }}"></script>
+                function attachSecretMessage(marker,id,name,email,phone,status) {
+                    marker.addListener('click', function() {
+
+                      var infowindow = new google.maps.InfoWindow();
+                      msg = '<div><strong style="text-transform:uppercase;">'+name+'</strong></div>';
+                      msg += '<div><p><strong>"'+status+'"</strong></p></div>';
+                      if (email.length>5){
+                        msg += '<div>Email : '+email+'</div><br/>';
+                      }
+                      if (phone.length>6){
+                        msg += '<div>Contact no : '+phone+'</div><br/>';
+                      }
+                      msg += '<div style="text-align:center;"><a href="http://www.messenger.com/'+id+'" class="btn waves-effect waves-light blue lighten-1">Send Message</a></div>';
+
+                      infowindow.setContent(msg);
+                        infowindow.open(map, this);
+                    /*
+                    var win = window.open('http://messenger.com/'+id, '_blank');
+                      if (win) {
+                         win.focus();
+                      } else {
+                         alert('Please allow popups for this website');
+                      }*/
+                  });
+                }
+              }
+            }
+          </script>
+          <script async defer
+          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC2uedkiOlLbkHmRCZ5G4mzUpbayOJUUs0&callback=initMap">
+          </script>
+
+
+          <script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
+          <script src="{{ url_for('static',filename='js/materialize.js') }}"></script>
+          <script src="{{ url_for('static',filename='js/init.js') }}"></script>
 
   </body>
 </html>

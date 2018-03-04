@@ -1,5 +1,7 @@
 import psycopg2
-conn = psycopg2.connect(host="localhost",database="fbsa", user="root", password="123")
+import os
+
+conn = psycopg2.connect(host="ec2-54-243-31-34.compute-1.amazonaws.com",database="d507blsk8btjjs", user="toofgkcpxslwfw", password="40f362e11a521a5690649d37197dcc2701c1bf245f77900585c0d8caf108f5da")
 
 cols = ["sender_id","name","phone","email","status","lon","lat"]
 
@@ -61,8 +63,16 @@ def get_user_interests(sender_id):
     return data
 
 def get_user_interest_data(interest):
+    interest = interest.lower()
     cur = conn.cursor()
-    cur.execute("Select DISTINCT ud.* from user_data ud,user_interests ui where ud.sender_id=ui.sender_id and (ui.interest='"+interest+"' or ud.status like '%"+interest+"%') and ud.lon!='' and ud.lat!='' and ud.visibility != 'off' ;")
+    cur.execute("Select DISTINCT ud.* from user_data ud,user_interests ui where ud.sender_id=ui.sender_id and (LOWER(ui.interest)='"+interest+"' or LOWER(ud.status) like '%"+interest+"%') and ud.lon!='' and ud.lat!='' and ud.visibility != 'off' ;")
+    data = cur.fetchall()
+    cur.close()
+    return data
+
+def get_all_interests():
+    cur = conn.cursor()
+    cur.execute("Select DISTINCT interest from user_interests;")
     data = cur.fetchall()
     cur.close()
     return data
