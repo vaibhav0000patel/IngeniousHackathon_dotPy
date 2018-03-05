@@ -7,8 +7,8 @@ from flask import Flask, request
 app = Flask(__name__)
 
 
-ACCESS_TOKEN = "EAAEY7WK7nP0BAKNOO0Rtmlvz1HEqdyL4Jn6pW9fNy0DZCPkCGqhFZCstcZChX3mZBtOpBzPwYQBaaMdXzZBRNE1oH7sk3PZBYDDduvSGq6QvW4He2zATYvWLHuYJ6OQY7MQrr8WWz4SgbZBpAZAusZBpJKaI0iVOGpGjfx2jQp8RZBqYGWO9ouJkkE"
-VERIFY_TOKEN = "test_token"
+ACCESS_TOKEN = ""
+VERIFY_TOKEN = ""
 root_url = "https://whispering-everglades-21251.herokuapp.com"
 
 def get_name(sender_id):
@@ -17,6 +17,14 @@ def get_name(sender_id):
     uname = profile_dic["first_name"] +"_"+ profile_dic["last_name"]
     return uname
 
+def get_messenger_id(sender_id):
+    profile = requests.get("https://graph.facebook.com/v2.6/"+sender_id+"?fields=first_name,last_name,profile_pic,third_party_id&access_token="+ACCESS_TOKEN).text
+    profile_dic = ast.literal_eval(profile)
+    print profile_dic ,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    ad_id = profile_dic["last_ad_referral"]["ad_id"]
+    return ad_id
+
+    pass
 def send_message(recipient_id, message_text):
 
     log("sending message to {recipient}: {text}".format(recipient=recipient_id, text=message_text))
@@ -167,16 +175,15 @@ def per_menu():
             "setting_type": "call_to_actions",
             "thread_state": "existing_thread",
             "call_to_actions": [
-            # {
-            #     "type": "web_url",
-            #     "title": "My interests",
-            #     "url":"https://tech-inside.herokuapp.com/",
-            #     "webview_height_ratio":"tall"
-            # },
             {
                 "type": "postback",
                 "title": "My Profile",
                 "payload": "profile"
+            },
+            {
+                "type": "postback",
+                "title": "Help",
+                "payload": "Help"
             },
             ]
         }
@@ -343,12 +350,12 @@ def start_button():
         log("start button errors-------------------------------")
 
 def check_interest(sender_id,interest):
-    url = root_url + "/getpinnedlocations?interest=" + str(interest)
+    url = root_url + "/getpinnedlocations/?interest=" + str(interest)
     response = requests.get(url).text
-    if response == 'N/A':
-        return 'N/A'
-    else:
+    if "/static/img/logo.png" in response:
         return 'ok'
+    else:
+        return 'N/A'
 
 def log(message):  # simple wrapper for logging to stdout on heroku
     print str(message)

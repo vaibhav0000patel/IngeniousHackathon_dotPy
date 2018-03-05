@@ -8,9 +8,9 @@ from flask import Flask, request
 import template
 app = Flask(__name__)
 
-ACCESS_TOKEN = "EAAEY7WK7nP0BAKNOO0Rtmlvz1HEqdyL4Jn6pW9fNy0DZCPkCGqhFZCstcZChX3mZBtOpBzPwYQBaaMdXzZBRNE1oH7sk3PZBYDDduvSGq6QvW4He2zATYvWLHuYJ6OQY7MQrr8WWz4SgbZBpAZAusZBpJKaI0iVOGpGjfx2jQp8RZBqYGWO9ouJkkE"
-VERIFY_TOKEN = "test_token"
-
+ACCESS_TOKEN = ""
+VERIFY_TOKEN = ""
+hello_text = ["hi","hello","hii","hey","hellow","heya","yo"]
 
 @app.route('/', methods=['GET'])
 def verify():
@@ -44,7 +44,12 @@ def webhook():
                     try:
                         message_text = messaging_event["message"]["text"]
                         message_text = message_text.lower()
-                        if message_text == "football":
+                        message_text = message_text.replace(" ","_")
+                        if message_text.lower() in hello_text:
+                            template.send_message(sender_id,"Hello! Tell me the interests you are looking for.")
+                        # m_id = template.get_messenger_id("sender_id")
+                        # template.send_message("sender_id",m_id)
+                        elif message_text == "football":
                             template.send_typing(sender_id)
                             template.send_button_fetch(sender_id,message_text)
                         elif message_text == "no":
@@ -104,6 +109,15 @@ def webhook():
                             template.add_data_quick_reply(send_id)
                         # else:
                         #     template.location_qruick_reply(send_id)
+                    elif msg == "Help":
+                        template.send_message(send_id,"""Hey!! \n
+We tried out best to make this chatbot as user-friendly as possible. still if you find any difficulties using this chatbot, here are the guidelines. \n
+1. when you tap on "Get Started", you will be asked to add location! if you already have added it earlier and it isn't changed afterwards, you can skip. \n 
+2. Then you can explore people based on your interests, by sending just an interest text. (e.g. for football, type "football" and send). \n 
+3. If bot could find people with the interest you are looking for, it will open google maps having people pinned on their respective locations with their contact details. \n
+4. In menu, you can find "My Profile". By tapping on that, a form in webview will be opened to ask about your interests and your contact details, which may help others to reach to you. \n 
+5. For the security reasons, we also have provided an option of "visibility" in My Profile by which, you can make yourself discover to other people as per your accordance. \n
+I hope this could help! \n""")
 
                     
     return "ok", 200
