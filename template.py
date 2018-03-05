@@ -2,396 +2,135 @@ import os
 import sys
 import json,ast
 from datetime import datetime
+
 import requests
 from flask import Flask, request
+import template
 app = Flask(__name__)
-
 
 ACCESS_TOKEN = ""
 VERIFY_TOKEN = ""
-root_url = "https://whispering-everglades-21251.herokuapp.com"
+hello_text = ["hi","hello","hii","hey","hellow","heya","yo"]
 
-def get_name(sender_id):
-    profile = requests.get("https://graph.facebook.com/v2.6/"+sender_id+"?fields=first_name,last_name,profile_pic&access_token="+ACCESS_TOKEN).text
-    profile_dic = ast.literal_eval(profile)
-    uname = profile_dic["first_name"] +"_"+ profile_dic["last_name"]
-    return uname
+@app.route('/', methods=['GET'])
+def verify():
+    # when the endpoint is registered as a webhook, it must echo back
+    # the 'hub.challenge' value it receives in the query arguments
+    if request.args.get("hub.mode") == "subscribe" and request.args.get("hub.challenge"):
+        if not request.args.get("hub.verify_token") == VERIFY_TOKEN:
+            return "Verification token mismatch", 403
+        return request.args["hub.challenge"], 200
 
-def get_messenger_id(sender_id):
-    profile = requests.get("https://graph.facebook.com/v2.6/"+sender_id+"?fields=first_name,last_name,profile_pic,third_party_id&access_token="+ACCESS_TOKEN).text
-    profile_dic = ast.literal_eval(profile)
-    print profile_dic ,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    ad_id = profile_dic["last_ad_referral"]["ad_id"]
-    return ad_id
-
-    pass
-def send_message(recipient_id, message_text):
-
-    log("sending message to {recipient}: {text}".format(recipient=recipient_id, text=message_text))
-
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message": {
-            "text": message_text
-        }
-    })
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("send_message button errors---------------------------------------")
-
-# Button with link of map/interest
-def send_button_fetch(recipient_id,message_text):
-    url = root_url + "/getpinnedlocations/?interest=" + message_text
-    print url + "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,"
-    log("sending message to {recipient}: {text}".format(recipient=recipient_id, text=message_text))
-
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message":{
-                    "attachment":{
-                                  "type":"template",
-                                  "payload":{
-                                            "template_type":"button",
-                                            "text":"Gotcha!",
-                                            "buttons":[{
-                                                        "type":"web_url",
-                                                        "url":url,
-                                                        "title":"View on Map"
-                                                        }]
-                                            }
-                                }
-                    }
-    })
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("send_button_fetch errors---------------------------------------")
-
-# get req to webform with location 
-def send_button_add_location(recipient_id,c_lat,c_lon,name):
-    log("sending user to {recipient} to webform with data : {lat} and {lon}".format(recipient=recipient_id, lat=c_lat,lon=c_lon))
-    #/submitlocation/<sender_id>?lon=<lon>&lat=<lat>
-    url = root_url + "/submitlocation/" + str(recipient_id) + "?lon=" + str(c_lon) + "&lat=" + str(c_lat) + "&name=" + str(name)
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message":{
-                    "attachment":{
-                                  "type":"template",
-                                  "payload":{
-                                            "template_type":"button",
-                                            "text":"Great!",    
-                                            "buttons":[{
-                                                        "type":"web_url",
-                                                        "url":url,
-                                                        "title":"Add interests"
-                                                        }]
-                                            }
-                                }
-                    }
-    })
-    
-
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("send_button_add errors---------------------------------------")
-
-# get req to webform without location [Location already available and user dont want to update]
-def send_button_add_interest(recipient_id,name):
-    log("sending user to {recipient} to webform with data : {recipient} and {name}".format(recipient=recipient_id, name=name))
-    # /adduserinfo/<sender_id>?name=<name>
-    url = root_url + "/adduserinfo/" + recipient_id + "?name=" + name
-    
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message":{
-                    "attachment":{
-                                  "type":"template",
-                                  "payload":{
-                                            "template_type":"button",
-                                            "text":"Great!",    
-                                            "buttons":[{
-                                                        "type":"web_url",
-                                                        "url":url,
-                                                        "title":"Add interests"
-                                                        }]
-                                            }
-                                }
-                    }
-    })
-    
-
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("send_button_add errors---------------------------------------")
-
-def per_menu():
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-
-    data = json.dumps( {
-            "setting_type": "call_to_actions",
-            "thread_state": "existing_thread",
-            "call_to_actions": [
-            {
-                "type": "postback",
-                "title": "My Profile",
-                "payload": "profile"
-            },
-            {
-                "type": "postback",
-                "title": "Help",
-                "payload": "Help"
-            },
-            ]
-        }
-    )
-    r = requests.post("https://graph.facebook.com/v2.6/me/thread_settings", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("PAYLOAD errors----------------------------")
-
-# send trending interests quick reply
-def send_quick_reply(recipient_id):
+    return "Hello world", 200
 
 
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message": {
-                        "text":'Here are some trending interests!',
-                        "quick_replies":[
-                            {
-                                "content_type":"text",
-                                "title":"Cricket",
-                                "payload":"Cricket"
-                            },
-                            {
-                                "content_type":"text",
-                                "title":"Football",
-                                "payload":"Football"
-                            },
-                            {
-                                "content_type":"text",
-                                "title":"Guitar",
-                                "payload":"Guitar"
-                            },
-                            {
-                                "content_type":"text",
-                                "title":"Maker",
-                                "payload":"Maker"
-                            },
+@app.route('/', methods=['POST'])
+def webhook():
+    # endpoint for processing incoming messaging events
 
-                            {
-                                "content_type":"text",
-                                "title":"Android developer",
-                                "payload":"Android developer"
-                            }
-                        ]
-                    }
-    })
+    data = request.get_json()
+    template.log(data)  # you may not want to log every incoming message in production, but it's good for testing
 
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("QR  button errors---------------------------------")
+    if data["object"] == "page":
 
-# single quick reply to get location
-def location_qruick_reply(recipient_id):
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message": {
-                        "text":'Let us know your location',
-                        "quick_replies":[
-                            {
-                                "content_type":"location",
-                                "title":"location",
-                                "payload":"location"
-                            }
-                        ]
-                    }
-    })
+        for entry in data["entry"]:
+            for messaging_event in entry["messaging"]:
 
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("location QR  button errors---------------------------------")
+                if messaging_event.get("message"):  # someone sent us a message
 
-def send_typing(recipient_id):
+                    sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
+                    recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
+                      # the message's text
+                    try:
+                        message_text = messaging_event["message"]["text"]
+                        message_text = message_text.lower()
+                        message_text = message_text.replace(" ","_")
+                        if message_text.lower() in hello_text:
+                            template.send_message(sender_id,"Hello! Tell me the interests you are looking for.")
+                        # m_id = template.get_messenger_id("sender_id")
+                        # template.send_message("sender_id",m_id)
+                        elif message_text == "football":
+                            template.send_typing(sender_id)
+                            template.send_button_fetch(sender_id,message_text)
+                        elif message_text == "no":
 
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "sender_action":"typing_on"
-    })
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-
-# update location quick reply
-def add_data_quick_reply(recipient_id):
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message": {
-                        "text":'Would you like to update your location?',
-                        "quick_replies":[
-                            {
-                                "content_type":"location",
-                                "title":"Update",
-                                "payload":"location"
-                            },
-                            {
-                                "content_type":"text",
-                                "title":"No",
-                                "payload":"call_webform"
-                            },
-                        ]
-                    }
-    })
-
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("add_data_quick_reply errors---------------------------------")
-
-def start_button():
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-
-    data = json.dumps( {
-            "setting_type": "call_to_actions",
-            "thread_state": "new_thread",
-            "call_to_actions": [{
-                "payload": "Get Started"
-            }]
-        })
-    r = requests.post("https://graph.facebook.com/v2.6/me/thread_settings", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("start button errors-------------------------------")
-
-def check_interest(sender_id,interest):
-    url = root_url + "/getpinnedlocations/?interest=" + str(interest)
-    response = requests.get(url).text
-    if "/static/img/logo.png" in response:
-        return 'ok'
-    else:
-        return 'N/A'
-
-def log(message):  # simple wrapper for logging to stdout on heroku
-    print str(message)
-    sys.stdout.flush()
+                            name = template.get_name(sender_id)
+                            url_res = requests.get("https://whispering-everglades-21251.herokuapp.com/adduserinfo/" + recipient_id + "?name=" + name).text
+                            if "/static/img/logo.png" in url_res:
+                                template.send_button_add_interest(sender_id,name)
+                            else:
+                                template.send_message(sender_id,"Opps somthing went wrong try again")
+                        elif message_text == "skip" or message_text == "Skip":
+                            template.send_message(sender_id,"Tell me the interests you are looking for!")
+                            template.send_quick_reply(sender_id)
 
 
-def welcome_quick_reply(recipient_id):
-    params = {
-        "access_token": ACCESS_TOKEN
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
-    data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message": {
-                        "text":'Would you like add your interests?',
-                        "quick_replies":[
-                            {
-                                "content_type":"location",
-                                "title":"Update",
-                                "payload":"location"
-                            },
-                            {
-                                "content_type":"text",
-                                "title":"Skip",
-                                "payload":"skip"
-                            },
-                        ]
-                    }
-    })
+                        # elif message_text == "location":
+                        #     template.send_button_fetch(sender_id,message_text)
+                        else:
+                            interest_db = template.check_interest(sender_id,message_text)
+                            if interest_db == 'N/A':
+                                template.send_message(sender_id,"Opps we dont have anyone around you with this interest right now.\n Can I help to find any other interests?")
+                                template.send_quick_reply(sender_id)
+                            elif interest_db == 'ok':
+                                template.send_button_fetch(sender_id,message_text)
+                            else: 
+                                template.send_message(sender_id,"Which kind of interests you are looking for?")
+                                template.send_quick_reply(sender_id)
+                    except:
+                        try:
+                            c_lat = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['lat']
+                            c_lon = messaging_event["message"]["attachments"][0]["payload"]["coordinates"]['long']
+                            name = template.get_name(sender_id)
+                            url_res = requests.get("https://whispering-everglades-21251.herokuapp.com/submitlocation/" + str(sender_id) + "?lon=" + str(c_lon) + "&lat=" + str(c_lat) + "&name=" + str(name)).text
+                            if "/static/img/logo.png" in url_res: 
+                                template.send_button_add_location(sender_id,c_lat,c_lon,name)
+                            else:
+                                template.send_message(sender_id,"Opps somthing went wrong try again")
+                        except:
+                            template.send_message(sender_id, "Something went wrong")
+                            template.send_quick_reply(sender_id)
 
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
-        log("welcome qr errors---------------------------------")
+
+
+                elif messaging_event.get("postback"):  # user clicked/tapped "postback" button in earlier message
+                    
+                    msg = messaging_event["postback"]['payload']
+                    send_id = messaging_event["sender"]['id']
+                    rece_id = messaging_event["recipient"]['id']
+                    # profile = requests.get("https://graph.facebook.com/v2.6/"+send_id+"?fields=first_name,last_name,profile_pic&access_token="+ACCESS_TOKEN).text
+                    # profile_dic = ast.literal_eval(profile)
+                    # print profile_dic
+                    # uname = profile_dic["first_name"] +" "+ profile_dic["last_name"]
+                    name = template.get_name(send_id)
+                    if msg == 'Get Started':
+                        template.send_typing(send_id)
+                        template.send_message(send_id,"Hello " + str(name.replace("_"," ")) + " \n" + "I am piloto, your assistant to find people with particular interest." )
+                        template.welcome_quick_reply(send_id)
+                    elif msg == 'profile':
+                        location_flag = requests.get("https://whispering-everglades-21251.herokuapp.com/checkuserlocation/"+str(send_id)).text
+                        if location_flag == "0":
+                            template.send_typing(send_id)
+                            template.location_qruick_reply(send_id)
+                        elif location_flag == "1":
+                            template.add_data_quick_reply(send_id)
+                        # else:
+                        #     template.location_qruick_reply(send_id)
+                    elif msg == "Help":
+                        template.send_message(send_id,"""Hey!! \n
+We tried out best to make this chatbot as user-friendly as possible. still if you find any difficulties using this chatbot, here are the guidelines. \n
+1. when you tap on "Get Started", you will be asked to add location! if you already have added it earlier and it isn't changed afterwards, you can skip. \n 
+2. Then you can explore people based on your interests, by sending just an interest text. (e.g. for football, type "football" and send). \n 
+3. If bot could find people with the interest you are looking for, it will open google maps having people pinned on their respective locations with their contact details. \n
+4. In menu, you can find "My Profile". By tapping on that, a form in webview will be opened to ask about your interests and your contact details, which may help others to reach to you. \n 
+5. For the security reasons, we also have provided an option of "visibility" in My Profile by which, you can make yourself discover to other people as per your accordance. \n
+I hope this could help! \n""")
+
+                    
+    return "ok", 200
+
+template.start_button()
+template.per_menu()
+
+if __name__ == '__main__':
+    app.run(debug=True,port=8080)
